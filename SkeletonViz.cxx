@@ -13,6 +13,9 @@
 #include <vtkCamera.h>
 #include <vtkTexture.h>
 #include <vtkPlaneSource.h>
+#include <vtkImageStack.h>
+#include <vtkImageSlice.h>
+#include <vtkImageSliceMapper.h>
 
 int main(int argc, char **argv) {
 	// ITK definitions for handling the slice image
@@ -32,20 +35,12 @@ int main(int argc, char **argv) {
 	// Convert to VTK image
 	connector->SetInput(reader->GetOutput());
 	connector->Update();
-
-	// Plug the image into a texture
-	vtkTexture *sliceTexture = vtkTexture::New();
-	sliceTexture->SetInputData(connector->GetOutput());
-	sliceTexture->InterpolateOn();
-	sliceTexture->Update();
-
-	// Set up a plane for the slice texture
-	vtkPlaneSource *plane = vtkPlaneSource::New();
-	vtkPolyDataMapper *planeMapper = vtkPolyDataMapper::New();
-	planeMapper->SetInputConnection(plane->GetOutputPort());
-	vtkActor *planeActor = vtkActor::New();
-	planeActor->SetMapper(planeMapper);
-	planeActor->SetTexture(sliceTexture);
+	
+	// Set up a vtkImageSlice for the current slice
+	vtkImageSliceMapper *sliceMapper = vtkImageSliceMapper::New();
+	sliceMapper->SetInputData(connector->GetOutput());
+	vtkImageSlice *sliceActor = vtkImageSlice::New();
+	sliceActor->SetMapper(sliceMapper);
 
 	// Set up VTK renderer
 	vtkRenderer *ren = vtkRenderer::New();
@@ -56,8 +51,8 @@ int main(int argc, char **argv) {
 	iren->SetRenderWindow(renWin);
 	iren->SetInteractorStyle(istyle);
 
-	// Add plane actor to the scene
-	ren->AddActor(planeActor);
+	// Add slice actor to the scene
+	ren->AddActor(sliceActor);
 	ren->SetBackground(0.1, 0.2, 0.4);
 	renWin->SetSize(512, 512);
 

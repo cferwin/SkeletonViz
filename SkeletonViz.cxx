@@ -30,6 +30,48 @@
 #include <vtkPiecewiseFunction.h>
 #include <vtkFixedPointVolumeRayCastMapper.h>
 #include <vtkVolumeRayCastMapper.h>
+#include <vtkBoxWidget.h>
+#include <vtkTransform.h>
+#include <vtkExtractVOI.h>
+#include <vtkPlanes.h>
+#include <vtkExtractGeometry.h>
+#include <vtkClipVolume.h>
+#include <vtkUnstructuredGridAlgorithm.h>
+#include <vtkUnstructuredGrid.h>
+#include <vtkPlaneWidget.h>
+#include <vtkPlane.h>
+
+// Define a callback for transforming the clipping plane box
+// (From Examples\Tutorial\Cone6
+
+class ClippingBoxInteractionCallback : public vtkCommand {
+public:
+	static ClippingBoxInteractionCallback *New() {
+		ClippingBoxInteractionCallback *c = new ClippingBoxInteractionCallback;
+		c->planes = vtkPlanes::New();
+
+		return c;
+	}
+
+	void Execute(vtkObject *caller, unsigned long vtkNotUsed(eventId), void* vtkNotUsed(callData)) VTK_OVERRIDE {
+		// Update the mapper's clipping planes with the new box widget planes.
+		widget = reinterpret_cast<vtkBoxWidget*>(caller);
+
+		widget->GetPlanes(planes);
+		mapper->RemoveAllClippingPlanes();
+		mapper->AddClippingPlane(planes->GetPlane(1));		// Back plane
+		//mapper->AddClippingPlane(planes->GetPlane(2));
+		//mapper->AddClippingPlane(planes->GetPlane(3));
+		mapper->AddClippingPlane(planes->GetPlane(4));		// Bottom plane
+		//mapper->AddClippingPlane(planes->GetPlane(5));
+		//mapper->AddClippingPlane(planes->GetPlane(6));
+		mapper->Update();
+	}
+
+	vtkBoxWidget *widget;
+	vtkFixedPointVolumeRayCastMapper *mapper;
+	vtkPlanes *planes;
+};
 
 int main(int argc, char **argv) {
 	// ITK definitions for handling the slice image
@@ -41,10 +83,19 @@ int main(int argc, char **argv) {
 	ReaderType::Pointer reader = ReaderType::New();
 	ConnectorType::Pointer connector = ConnectorType::New();
 
+	typedef itk::NumericSeriesFileNames NameGeneratorType;
+	NameGeneratorType::Pointer nameGenerator = NameGeneratorType::New();
+
 	// Kinda validate input
-	if (argc < 5) {
-		cout << "Enter a base file path, extension, first number, last number" << endl;
-		//return 1;
+	if (argc >= 4) {
+		nameGenerator->SetSeriesFormat(argv[1]);
+		nameGenerator->SetStartIndex(std::stoi(argv[2]));
+		nameGenerator->SetEndIndex(std::stoi(argv[3]));
+	}
+	else {
+		nameGenerator->SetSeriesFormat("F:\\prog\\ITK\\SkeletonViz\\build\\Debug\\data\\img (%d).tif");
+		nameGenerator->SetStartIndex(1);
+		nameGenerator->SetEndIndex(113);
 	}
 
 	std::vector<std::string> paths;
@@ -53,11 +104,13 @@ int main(int argc, char **argv) {
 	//vtkImageStack *stackActor = vtkImageStack::New();
 
 	// Generate file paths
+	/*
 	typedef itk::NumericSeriesFileNames NameGeneratorType;
 	NameGeneratorType::Pointer nameGenerator = NameGeneratorType::New();
 	nameGenerator->SetSeriesFormat(argv[1]);
 	nameGenerator->SetStartIndex(std::stoi(argv[2]));
 	nameGenerator->SetEndIndex(std::stoi(argv[3]));
+	*/
 	nameGenerator->SetIncrementIndex(1);
 	std::vector<std::string> filePaths = nameGenerator->GetFileNames();
 
@@ -80,8 +133,8 @@ int main(int argc, char **argv) {
 
 	// Add volume mapper
 	vtkFixedPointVolumeRayCastMapper *mapper = vtkFixedPointVolumeRayCastMapper::New();
-	//vtkVolumeRayCastMapper *mapper = vtkVolumeRayCastMapper::New();
 	connector->Update();
+	
 	mapper->SetInputData(connector->GetOutput());
 	double spacing[3];
 	connector->GetOutput()->GetSpacing(spacing);
@@ -113,6 +166,17 @@ int main(int argc, char **argv) {
 	gradientFun->AddPoint(850, 1, 0.5, 0.5);
 	gradientFun->AddPoint(3071, 1, 0.5, 0.5);
 
+	/*
+	vtkPlaneWidget *planeWidget = vtkPlaneWidget::New();
+	planeWidget->SetInteractor(iren);
+	planeWidget->SetPlaceFactor(1.25);
+	planeWidget->SetProp3D(volume);
+	planeWidget->PlaceWidget();
+
+	vtkPlane *plane = vtkPlane::New();
+	planeWidget->GetPlane(plane);
+	*/
+
     mapper->SetBlendModeToComposite();
 	prop->ShadeOn();
 	prop->SetAmbient(0.1);
@@ -124,10 +188,24 @@ int main(int argc, char **argv) {
 	prop->SetGradientOpacity(gradientFun);
 	prop->SetScalarOpacity(opacityFun);
 
-
 	// Connect the volume to property and mapper
 	volume->SetProperty(prop);
 	volume->SetMapper(mapper);
+
+	// Create a box widget to control the clipping planes
+	vtkBoxWidget *boxWidget = vtkBoxWidget::New();
+	boxWidget->SetInteractor(iren);
+	boxWidget->SetPlaceFactor(0.25);
+	boxWidget->SetProp3D(volume);
+	boxWidget->PlaceWidget();
+	boxWidget->On();
+
+	// Set a callback for interaction
+	ClippingBoxInteractionCallback *callback = ClippingBoxInteractionCallback::New();
+	callback->widget = boxWidget;
+	callback->mapper = mapper;
+	boxWidget->GetPlanes(callback->planes);
+	boxWidget->AddObserver(vtkCommand::InteractionEvent, callback);
 
 	// Render the scene
 	ren->SetBackground(0.1, 0.2, 0.4);
@@ -136,6 +214,18 @@ int main(int argc, char **argv) {
 	ren->ResetCamera();
 	renWin->Render();
 	iren->Start();
+
+	// Clean Up
+	prop->Delete();
+	gradientFun->Delete();
+	opacityFun->Delete();
+	colorFun->Delete();
+	boxWidget->Delete();
+	mapper->Delete();
+	volume->Delete();
+	iren->Delete();
+	ren->Delete();
+	renWin->Delete();
 
 	return 0;
 }

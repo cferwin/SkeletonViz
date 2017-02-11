@@ -1,6 +1,3 @@
-#include <itkImage.h>
-#include <itkImageFileReader.h>
-#include <itkImageToVTKImageFilter.h>
 #include <vtkImageViewer.h>
 #include <vtkCylinderSource.h>
 #include <vtkPolyDataMapper.h>
@@ -19,8 +16,6 @@
 #include <vector>
 #include <vtkCallbackCommand.h>
 #include <vtkImageProperty.h>
-#include <itkImageSeriesReader.h>
-#include <itkNumericSeriesFileNames.h>
 #include <vtkUnsignedShortArray.h>
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
@@ -43,52 +38,18 @@
 #include <vtkBoxClipDataSet.h>
 #include <vtkAlgorithm.h>
 #include <vtkTrivialProducer.h>
-
-// Define a callback for transforming the clipping plane box
-// (From Examples\Tutorial\Cone6
-
-class ClippingPlaneInteractionCallback : public vtkCommand {
-public:
-	static ClippingPlaneInteractionCallback *New() {
-		ClippingPlaneInteractionCallback *cb = new ClippingPlaneInteractionCallback;
-		cb->widget = NULL;
-		cb->plane = vtkPlane::New();
-
-		return cb;
-	}
-
-	void Execute(vtkObject *caller, unsigned long vtkNotUsed(eventId), void* vtkNotUsed(callData)) VTK_OVERRIDE {
-		// This method executes when the vtkPlaneWidget is altered, and the
-		// plane has probably been altered. Update the mapper to see the change.
-		widget = reinterpret_cast<vtkPlaneWidget*>(caller);
-
-		widget->GetPlane(plane);
-		mapper->AddClippingPlane(plane);
-
-		mapper->Update();
-	}
-
-	vtkPlaneWidget *widget;
-	vtkPlane *plane;
-	vtkFixedPointVolumeRayCastMapper *mapper;
-};
+#include "SkeletonViz.h"
+#include "ClippingPlaneInteractionCallback.h"
+//#include "ClippingPlaneFactory.h"
 
 int main(int argc, char **argv) {
-	// Data type definitions
-
-	//typedef itk::Image<unsigned short, 2> ImageType;
-	typedef itk::Image<double, 3> ImageType;						// vtkFixedPointVolumeRayCastMapper can't support short data
-	typedef itk::ImageSeriesReader<ImageType> ReaderType;
-	typedef itk::ImageToVTKImageFilter <ImageType> ConnectorType;	// To convert image data from ITK to VTK format.
-	typedef itk::NumericSeriesFileNames NameGeneratorType;
-
 	// Define variables
 	NameGeneratorType::Pointer nameGenerator = NameGeneratorType::New();
 	ReaderType::Pointer reader = ReaderType::New();
 	ConnectorType::Pointer connector = ConnectorType::New();
 	vtkTrivialProducer *connectorPort = vtkTrivialProducer::New();
 	vtkVolume *volume = vtkVolume::New();
-	vtkFixedPointVolumeRayCastMapper *mapper = vtkFixedPointVolumeRayCastMapper::New();
+	MapperType *mapper = vtkFixedPointVolumeRayCastMapper::New();
 
 	// Kinda validate input to support both command line input and make debugger use simpler.
 	// TODO: Improve checks on input and remove debugger part later on.
@@ -176,18 +137,7 @@ int main(int argc, char **argv) {
 	volume->SetMapper(mapper);
 
 	// Set up a clipping plane
-	vtkPlaneWidget *clipPlane = vtkPlaneWidget::New();
-	clipPlane->SetInteractor(iren);
-	clipPlane->SetPlaceFactor(1.25);
-	clipPlane->SetProp3D(volume);
-	clipPlane->PlaceWidget();
-	clipPlane->On();
-
-	// Set a callback for interaction
-	ClippingPlaneInteractionCallback *callback = ClippingPlaneInteractionCallback::New();
-	callback->widget = clipPlane;
-	callback->mapper = mapper;
-	clipPlane->AddObserver(vtkCommand::InteractionEvent, callback);
+	//vtkPlaneWidget *plane = ClippingPlaneFactory::createClippingPlane(iren, volume, mapper);
 	
 	// Render the scene
 	ren->SetBackground(0.1, 0.2, 0.4);
@@ -198,8 +148,6 @@ int main(int argc, char **argv) {
 	iren->Start();
 
 	// Clean Up
-	callback->Delete();
-	clipPlane->Delete();
 	prop->Delete();
 	gradientFun->Delete();
 	opacityFun->Delete();

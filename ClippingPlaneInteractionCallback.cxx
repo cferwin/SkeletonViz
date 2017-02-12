@@ -1,5 +1,3 @@
-#pragma once
-
 #include "ClippingPlaneInteractionCallback.h"
 
 // Define a callback for modifying a clipping plane

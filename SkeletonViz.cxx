@@ -40,7 +40,7 @@
 #include <vtkTrivialProducer.h>
 #include "SkeletonViz.h"
 #include "ClippingPlaneInteractionCallback.h"
-//#include "ClippingPlaneFactory.h"
+#include "ClippingPlaneMaker.h"
 
 int main(int argc, char **argv) {
 	// Define variables
@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
 	volume->SetMapper(mapper);
 
 	// Set up a clipping plane
-	//vtkPlaneWidget *plane = ClippingPlaneFactory::createClippingPlane(iren, volume, mapper);
+	vtkPlaneWidget *plane = ClippingPlaneMaker::AddClippingPlane(iren, volume, mapper);
 	
 	// Render the scene
 	ren->SetBackground(0.1, 0.2, 0.4);
@@ -148,6 +148,7 @@ int main(int argc, char **argv) {
 	iren->Start();
 
 	// Clean Up
+	ClippingPlaneMaker::RemoveClippingPlane(plane);
 	prop->Delete();
 	gradientFun->Delete();
 	opacityFun->Delete();

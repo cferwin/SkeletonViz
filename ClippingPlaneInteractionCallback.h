@@ -1,5 +1,4 @@
 #pragma once
-
 #include <vtkCommand.h>
 #include <vtkPlaneWidget.h>
 #include <vtkPlane.h>

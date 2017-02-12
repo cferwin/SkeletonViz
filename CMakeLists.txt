@@ -14,6 +14,6 @@ ELSE()
     SET(Glue ItkVtkGlue)
 ENDIF()
 
-ADD_EXECUTABLE(SkeletonViz SkeletonViz.cxx ClippingPlaneInteractionCallback.cxx)
+ADD_EXECUTABLE(SkeletonViz SkeletonViz.cxx ClippingPlaneInteractionCallback.cxx ClippingPlaneMaker.cxx)
 
 TARGET_LINK_LIBRARIES(SkeletonViz ${ITK_LIBRARIES} ${VTK_LIBRARIES} ${Glue})

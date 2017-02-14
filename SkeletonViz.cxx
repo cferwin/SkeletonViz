@@ -41,6 +41,7 @@
 #include "SkeletonViz.h"
 #include "ClippingPlaneInteractionCallback.h"
 #include "ClippingPlaneMaker.h"
+#include "ClippingPlaneAddRemoveCallback.h"
 
 int main(int argc, char **argv) {
 	// Define variables
@@ -136,6 +137,12 @@ int main(int argc, char **argv) {
 	mapper->SetBlendModeToComposite();
 	volume->SetMapper(mapper);
 
+	// Add a callback for adding/removing clipping planes with the (A)dd / (D)elete keys
+	ClippingPlaneAddRemoveCallback *cb = ClippingPlaneAddRemoveCallback::New();
+	cb->mapper = mapper;
+	cb->prop = volume;
+	iren->AddObserver(vtkCommand::KeyPressEvent, cb);
+
 	// Set up a clipping plane
 	vtkPlaneWidget *plane = ClippingPlaneMaker::AddClippingPlane(iren, volume, mapper);
 	
@@ -148,7 +155,7 @@ int main(int argc, char **argv) {
 	iren->Start();
 
 	// Clean Up
-	ClippingPlaneMaker::RemoveClippingPlane(plane);
+	ClippingPlaneMaker::RemoveClippingPlane(plane, mapper);
 	prop->Delete();
 	gradientFun->Delete();
 	opacityFun->Delete();

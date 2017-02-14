@@ -4,6 +4,7 @@
 #include <vtkPlaneWidget.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkProp3D.h>
+#include <vtkPlane.h>
 #include "SkeletonViz.h"
 #include <vector>
 
@@ -16,8 +17,12 @@ public:
 
 	// Deletes the specified plane widget.
 	// Returns true if successful, false otherwise.
-	static bool RemoveClippingPlane(vtkPlaneWidget *plane);
+	static bool RemoveClippingPlane(vtkPlaneWidget *plane, MapperType *mapper);
+
+	// Deletes the most recently added plane widget
+	static bool ClippingPlaneMaker::RemoveLastClippingPlane(MapperType *mapper);
 
 private:
 	static std::vector<vtkPlaneWidget*> planeWidgets;
+	static std::vector<vtkPlane*> planes;
 };

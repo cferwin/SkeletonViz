@@ -44,38 +44,58 @@
 #include "ClippingPlaneAddRemoveCallback.h"
 
 int main(int argc, char **argv) {
-	// Define variables
-	NameGeneratorType::Pointer nameGenerator = NameGeneratorType::New();
-	ReaderType::Pointer reader = ReaderType::New();
-	ConnectorType::Pointer connector = ConnectorType::New();
-	vtkTrivialProducer *connectorPort = vtkTrivialProducer::New();
-	vtkVolume *volume = vtkVolume::New();
-	MapperType *mapper = vtkFixedPointVolumeRayCastMapper::New();
+    // Set the default visualization type
+    currentVisualizationType = BONE_ONLY;       // Segmented skeletal structure only
+    //currentVisualizationType = BONE_AND_TISSUE; // Bone in the context of partially-visible surrounding tissue
 
-	// Kinda validate input to support both command line input and make debugger use simpler.
-	// TODO: Improve checks on input and remove debugger part later on.
-	if (argc >= 4) {
-		nameGenerator->SetSeriesFormat(argv[1]);
-		nameGenerator->SetStartIndex(std::stoi(argv[2]));
-		nameGenerator->SetEndIndex(std::stoi(argv[3]));
-	}
-	else {
-		// TODO: Remove this block once main development is done.
-		nameGenerator->SetSeriesFormat("F:\\prog\\ITK\\SkeletonViz\\build\\Debug\\data\\img (%d).tif");
-		nameGenerator->SetStartIndex(1);
-		nameGenerator->SetEndIndex(113);
-	}
+    // Define variables
+    NameGeneratorType::Pointer nameGenerator = NameGeneratorType::New();
+    ReaderType::Pointer reader = ReaderType::New();
+    ConnectorType::Pointer connector = ConnectorType::New();
+    vtkTrivialProducer *connectorPort = vtkTrivialProducer::New();
+    vtkVolume *volume = vtkVolume::New();
+    MapperType *mapper = vtkFixedPointVolumeRayCastMapper::New();
+    ThresholdFilterType::Pointer thresholdFilter = itk::ThresholdImageFilter<ImageType>::New();
+    const int boneLevel = 1200;
 
-	// Generate file paths for the reader
-	nameGenerator->SetIncrementIndex(1);
-	std::vector<std::string> filePaths = nameGenerator->GetFileNames();
+    // Kinda validate input to support both command line input and make debugger use simpler.
+    // TODO: Improve checks on input and remove debugger part later on.
+    if (argc >= 4) {
+        nameGenerator->SetSeriesFormat(argv[1]);
+        nameGenerator->SetStartIndex(std::stoi(argv[2]));
+        nameGenerator->SetEndIndex(std::stoi(argv[3]));
+    }
+    else {
+        // TODO: Remove this block once main development is done.
+        nameGenerator->SetSeriesFormat("F:\\prog\\ITK\\SkeletonViz\\build\\Debug\\data\\img (%d).tif");
+        nameGenerator->SetStartIndex(1);
+        nameGenerator->SetEndIndex(113);
+    }
 
-	// Load slice image files into memory with series reader.
-	reader->SetFileNames(filePaths);
-	reader->Update();
+    // Generate file paths for the reader
+    nameGenerator->SetIncrementIndex(1);
+    std::vector<std::string> filePaths = nameGenerator->GetFileNames();
+
+    // Load slice image files into memory with series reader.
+    reader->SetFileNames(filePaths);
+    reader->Update();
+
+    // Isolate the areas of interest.
+    if (currentVisualizationType == BONE_ONLY) {
+        // Perform threshold segmentation using the bone value
+        thresholdFilter->SetInput(reader->GetOutput());
+        thresholdFilter->ThresholdBelow(boneLevel);
+        thresholdFilter->SetOutsideValue(0);
+        thresholdFilter->Update();
+    }
 
 	// Convert image data from ITK to VTK format
-	connector->SetInput(reader->GetOutput());
+    if (currentVisualizationType == BONE_ONLY) {
+        connector->SetInput(thresholdFilter->GetOutput());
+    }
+    else {
+        connector->SetInput(reader->GetOutput());
+    }
 
 	// Create a dummy producer to provide an output port from the connector, which
 	// seems to have no support for an output port
@@ -93,28 +113,41 @@ int main(int argc, char **argv) {
 	iren->SetInteractorStyle(istyle);
 
 	// Create transfer functions for...
-	// Color
-	vtkColorTransferFunction *colorFun = vtkColorTransferFunction::New();
-	colorFun->AddRGBPoint(-3024, 0, 0, 0, 0.5, 0.0);
-	colorFun->AddRGBPoint(850, .55, .25, .15, 0.5, .92);
-	colorFun->AddRGBPoint(1100, .88, .60, .29, 0.33, 0.45);
-	colorFun->AddRGBPoint(1200, 1, .94, .95, 0.5, 0.0);
-	colorFun->AddRGBPoint(3071, .83, .66, 1, 0.5, 0.0);
+    vtkColorTransferFunction *colorFun = vtkColorTransferFunction::New();
+    vtkPiecewiseFunction *opacityFun = vtkPiecewiseFunction::New();
+    vtkPiecewiseFunction *gradientFun = vtkPiecewiseFunction::New();
 
-	// Opacity
-	vtkPiecewiseFunction *opacityFun = vtkPiecewiseFunction::New();
-	opacityFun->AddPoint(400, 0.2, 0.5, 0);
-	opacityFun->AddPoint(700, 0.8, 0.5, 0.5);
-	opacityFun->AddPoint(800, 0.5, 0.5, 0.5);
-	opacityFun->AddPoint(1200, 0.3, 0.5, 1);
-	opacityFun->AddPoint(300, 1, 0.5, 1);
-	
-	// Opacity Gradient
-	vtkPiecewiseFunction *gradientFun = vtkPiecewiseFunction::New();
-	gradientFun->AddPoint(-3024, 0, 0.5, 0.0);
-	gradientFun->AddPoint(100, 0, 0.5, 0.0);
-	gradientFun->AddPoint(850, 1, 0.5, 0.5);
-	gradientFun->AddPoint(3071, 1, 0.5, 0.5);
+    if (currentVisualizationType == BONE_ONLY) {
+        // Color
+        colorFun->AddRGBPoint(-3024, 0, 0, 0, 0.5, 0.0);
+        colorFun->AddRGBPoint(860, 1, 0.92, 0.54, 0.5, 0.0);
+        //colorFun->AddRGBPoint(860, 0.83, 0.94, 1, 0.63, 0.0);
+        //colorFun->AddRGBPoint(4096, 1, 1, 1, 1, 0.5);
+
+        // Opacity
+        opacityFun->AddPoint(-3024, 0, 0.5, 0.0);
+        opacityFun->AddPoint(boneLevel - 1, 0, 0.5, 0.0);
+        opacityFun->AddPoint(boneLevel, 1, 0.5, 0.0);
+    }
+    else {
+        // Color
+        colorFun->AddRGBPoint(-3024, 0, 0, 0, 0.5, 0.0);
+        //colorFun->AddRGBPoint(860, 0.83, 0.94, 1, 0.63, 0.0);
+        colorFun->AddRGBPoint(860, 1, 0.92, 0.54, 0.5, 0.5);
+        //colorFun->AddRGBPoint(4096, 1, 1, 1, 1, 0.5);
+
+        // Opacity
+        opacityFun->AddPoint(-3024, 0, 0.5, 0.0);
+        //opacityFun->AddPoint(1000, 1, 0.5, 0.0);
+        opacityFun->AddPoint(boneLevel, 1, 0.5, 0.8);
+        opacityFun->AddPoint(4096, 1, 0.5, 0.0);
+
+        // Opacity Gradient
+        gradientFun->AddPoint(-3024, 0, 0.5, 0.0);
+        gradientFun->AddPoint(100, 0, 0.5, 0.0);
+        gradientFun->AddPoint(2700, 1, 0.5, 1);
+        gradientFun->AddPoint(4096, 1, 0.5, 1);
+    }
 
 	// Set up the VolumeProperty and connect to the Volume
 	vtkVolumeProperty *prop = vtkVolumeProperty::New();
@@ -127,12 +160,13 @@ int main(int argc, char **argv) {
 	prop->SetSpecularPower(10.0);
 	prop->SetScalarOpacityUnitDistance(0.8919);
 	prop->SetColor(colorFun);
-	prop->SetGradientOpacity(gradientFun);
 	prop->SetScalarOpacity(opacityFun);
-	volume->SetProperty(prop);
+    if (currentVisualizationType == BONE_AND_TISSUE) {
+        prop->SetGradientOpacity(gradientFun);
+    }
+    volume->SetProperty(prop);
 
 	// Set up the Mapper and connect to the Volume
-	//mapper->SetInputData(connector->GetOutput());
 	mapper->SetInputConnection(connectorPort->GetOutputPort());
 	mapper->SetBlendModeToComposite();
 	volume->SetMapper(mapper);

@@ -1,9 +1,11 @@
-#include "BoneOnlyPipeline.h"
 #include "SkeletonViz.h"
 #include "ClippingPlaneInteractionCallback.h"
 #include "ClippingPlaneMaker.h"
 #include "ClippingPlaneAddRemoveCallback.h"
 #include "VisualizationModeCallback.h"
+#include "BoneOnlyPipeline.h"
+#include <vtkRenderWindow.h>
+#include <vtkInteractorStyleTrackballCamera.h>
 
 int main(int argc, char **argv) {
     // Set the default visualization type
@@ -36,8 +38,6 @@ int main(int argc, char **argv) {
     reader->SetFileNames(filePaths);
     reader->Update();
 
-    //
-    std::cout << "Set up renderer..." << std::endl;
     // Set up VTK renderer and camera
     vtkRenderer *ren = vtkRenderer::New();
     vtkRenderWindow *renWin = vtkRenderWindow::New();
@@ -47,12 +47,10 @@ int main(int argc, char **argv) {
     iren->SetRenderWindow(renWin);
     iren->SetInteractorStyle(istyle);
 
-    std::cout << "Creating pipelines..." << std::endl;
     // Create pipelines
     BoneOnlyPipeline boneOnly = BoneOnlyPipeline(reader);
     boneOnly.addToRenderer(ren, iren);
 
-    std::cout << "Creating callbacks..." << std::endl;
     // Add a visualization mode callback to change rendering modes (i.e. change between pipelines) on the fly
     VisualizationModeCallback *modeCallback = VisualizationModeCallback::New();
     modeCallback->ren = ren;
@@ -61,15 +59,12 @@ int main(int argc, char **argv) {
     modeCallback->boneOnly = &boneOnly;
     iren->AddObserver(vtkCommand::KeyPressEvent, modeCallback);
 	
-    std::cout << "rendering..." << std::endl;
 	// Render the scene
 	ren->SetBackground(0.1, 0.2, 0.4);
 	renWin->SetSize(512, 512);
 	ren->ResetCamera();
 	renWin->Render();
 	iren->Start();
-
-    std::cout << "cleaning up.." << std::endl;
 
 	// Clean Up
 	iren->Delete();

@@ -1,14 +1,12 @@
 #pragma once
+#include "SkeletonViz.h"
 #include <vtkPlaneWidget.h>
 #include "ClippingPlaneInteractionCallback.h"
 #include <vtkPlaneWidget.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkProp3D.h>
 #include <vtkPlane.h>
-#include "SkeletonViz.h"
 #include <vector>
-
-typedef vtkFixedPointVolumeRayCastMapper MapperType;
 
 class ClippingPlaneMaker {
 public:

@@ -1,7 +1,6 @@
 #include "BoneOnlyPipeline.h"
 
 BoneOnlyPipeline::BoneOnlyPipeline(itk::ImageSource<ImageType> *input) {
-    std::cout << "STARTING BONE ONLY CONSTRUCTION" << std::endl;
     // Initialize variables (pipeline objects)
     connector = ConnectorType::New();           // To convert from ITK to VTK
     connectorPort = vtkTrivialProducer::New();  //
@@ -13,9 +12,7 @@ BoneOnlyPipeline::BoneOnlyPipeline(itk::ImageSource<ImageType> *input) {
     gradientFun = vtkPiecewiseFunction::New();  // and gradient opacity.
     prop = vtkVolumeProperty::New(); // Volume property
     addRemoveCallback = ClippingPlaneAddRemoveCallback::New(); // Callback to add or remove clipping planes
-    //modeCallback = VisualizationModeCallback::New();
-    //modeCallback = cb;
-    const int boneLevel = 1200;
+    const int boneLevel = 1200; // Threshold intensity for bone
 
     // Isolate the areas of interest.
     if (currentVisualizationType == BONE_ONLY) {
@@ -40,17 +37,7 @@ BoneOnlyPipeline::BoneOnlyPipeline(itk::ImageSource<ImageType> *input) {
     connector->Update();
     connectorPort->Update();
 
-    // Set up VTK renderer and camera
-    //vtkRenderer *ren = vtkRenderer::New();
-    //vtkRenderWindow *renWin = vtkRenderWindow::New();
-    //renWin->AddRenderer(ren);
-    //vtkRenderWindowInteractor *iren = vtkRenderWindowInteractor::New();
-    //vtkInteractorStyleTrackballCamera *istyle = vtkInteractorStyleTrackballCamera::New();
-    //iren->SetRenderWindow(renWin);
-    //iren->SetInteractorStyle(istyle);
-
     // Create transfer functions for...
-
     if (currentVisualizationType == BONE_ONLY) {
         // Color
         colorFun->AddRGBPoint(-3024, 0, 0, 0, 0.5, 0.0);
@@ -107,20 +94,9 @@ BoneOnlyPipeline::BoneOnlyPipeline(itk::ImageSource<ImageType> *input) {
     // Add a callback for adding/removing clipping planes with the (A)dd / (D)elete keys
     addRemoveCallback->mapper = mapper;
     addRemoveCallback->prop = volume;
-    //iren->AddObserver(vtkCommand::KeyPressEvent, addRemoveCallback);
-
-    // Add a callback for changing the visualization mode
-    //modeCallback->mapper = mapper;
-    //iren->AddObserver(vtkCommand::KeyPressEvent, modeCallback);
-
-    // Set up a clipping plane
-    //plane = ClippingPlaneMaker::AddClippingPlane(iren, volume, mapper);
-    
-    std::cout << "DONE WITH BONE ONLY CONSTRUCTION" << std::endl;
 }
 
 BoneOnlyPipeline::~BoneOnlyPipeline() {
-    std::cout << "STARTING BONE ONLY DECONSTRUCTION" << std::endl;
     connector->Delete();
     connectorPort->Delete();
     volume->Delete();
@@ -134,16 +110,11 @@ BoneOnlyPipeline::~BoneOnlyPipeline() {
 
     // Interaction callbacks
     addRemoveCallback->Delete(); // Add or remove clipping planes
-    //modeCallback->Delete(); // Change render mode
-
-    std::cout << "DONE WITH BONE_ONLY DECONSTRUCTION" << std::endl;
 }
 
 void BoneOnlyPipeline::addToRenderer(vtkRenderer *ren, vtkRenderWindowInteractor *iren) {
-    std::cout << "ADDING BONEONLY TO RENDERER" << std::endl;
     // Set callbacks
     iren->AddObserver(vtkCommand::KeyPressEvent, addRemoveCallback);
-    //iren->AddObserver(vtkCommand::KeyPressEvent, modeCallback);
    
     // Add a clipping plane
     plane = ClippingPlaneMaker::AddClippingPlane(iren, volume, mapper);
@@ -153,8 +124,6 @@ void BoneOnlyPipeline::addToRenderer(vtkRenderer *ren, vtkRenderWindowInteractor
 }
 
 void BoneOnlyPipeline::removeFromRenderer(vtkRenderer *ren, vtkRenderWindowInteractor *iren) {
-    std::cout << "REMOVING BONEONLY FROM RENDERER" << std::endl;
-
     // Remove callbacks
     iren->RemoveObserver(addRemoveCallback);
 

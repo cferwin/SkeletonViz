@@ -3,7 +3,7 @@
 #include <vtkCommand.h>
 #include "BoneOnlyPipeline.h"
 
-class BoneOnlyPipeline;
+//class BoneOnlyPipeline;
 
 // Define a callback for changing the current visualization mode
 class VisualizationModeCallback : public vtkCommand {

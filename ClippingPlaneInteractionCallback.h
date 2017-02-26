@@ -1,11 +1,9 @@
 #pragma once
+#include "SkeletonViz.h" // MapperType
 #include <vtkCommand.h>
 #include <vtkPlaneWidget.h>
 #include <vtkPlane.h>
 #include <vtkObject.h>
-#include "SkeletonViz.h" // MapperType
-
-typedef vtkFixedPointVolumeRayCastMapper MapperType;
 
 // Define a callback for modifying a clipping plane
 class ClippingPlaneInteractionCallback : public vtkCommand {

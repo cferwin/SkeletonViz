@@ -1,6 +1,9 @@
 #pragma once
 #include "ClippingPlaneMaker.h"
 
+typedef vtkFixedPointVolumeRayCastMapper MapperType;
+class ClippingPlaneMaker;
+
 // Define a callback for Adding or Removing a clipping plane
 class ClippingPlaneAddRemoveCallback : public vtkCommand {
 public:

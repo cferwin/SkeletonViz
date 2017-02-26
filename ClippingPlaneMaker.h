@@ -8,6 +8,8 @@
 #include "SkeletonViz.h"
 #include <vector>
 
+typedef vtkFixedPointVolumeRayCastMapper MapperType;
+
 class ClippingPlaneMaker {
 public:
 	ClippingPlaneMaker();

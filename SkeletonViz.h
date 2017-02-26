@@ -5,6 +5,7 @@
 #include <itkImageToVTKImageFilter.h>
 #include <itkNumericSeriesFileNames.h>
 #include <itkThresholdImageFilter.h>
+#include "BoneOnlyPipeline.h"
 //#include <itkGradientAnisotropicDiffusionImageFilter.h>
 
 // Define data types

@@ -97,7 +97,6 @@ BoneOnlyPipeline::BoneOnlyPipeline(itk::ImageSource<ImageType> *input) {
 }
 
 BoneOnlyPipeline::~BoneOnlyPipeline() {
-    connector->Delete();
     connectorPort->Delete();
     volume->Delete();
     mapper->Delete();

@@ -65,7 +65,6 @@ BoneAndTissuePipeline::BoneAndTissuePipeline(itk::ImageSource<ImageType> *input)
 }
 
 BoneAndTissuePipeline::~BoneAndTissuePipeline() {
-    connector->Delete();
     connectorPort->Delete();
     volume->Delete();
     mapper->Delete();

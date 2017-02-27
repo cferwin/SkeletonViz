@@ -12,7 +12,7 @@ typedef vtkFixedPointVolumeRayCastMapper MapperType;
 //typedef itk::Image<unsigned short, 2> ImageType;
 typedef itk::Image<double, 3> ImageType;						// vtkFixedPointVolumeRayCastMapper can't support short data
 typedef itk::ImageSeriesReader<ImageType> ReaderType;
-typedef itk::ImageToVTKImageFilter <ImageType> ConnectorType;	// To convert image data from ITK to VTK format.
+typedef itk::ImageToVTKImageFilter<ImageType> ConnectorType;	// To convert image data from ITK to VTK format.
 typedef itk::NumericSeriesFileNames NameGeneratorType;
 typedef itk::ThresholdImageFilter<ImageType> ThresholdFilterType;
 //typedef itk::GradientAnisotropicDiffusionImageFilter<ImageType, ImageType> DiffusionFilterType;

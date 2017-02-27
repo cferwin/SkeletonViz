@@ -19,7 +19,8 @@ typedef itk::ThresholdImageFilter<ImageType> ThresholdFilterType;
 
 enum VisualizationType {
     BONE_ONLY,
-    BONE_AND_TISSUE
+    BONE_AND_TISSUE,
+    BOTH_MODES
 };
 
 static VisualizationType currentVisualizationType;

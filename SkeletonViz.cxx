@@ -4,6 +4,7 @@
 #include "ClippingPlaneAddRemoveCallback.h"
 #include "VisualizationModeCallback.h"
 #include "BoneOnlyPipeline.h"
+#include "BoneAndTissuePipeline.h"
 #include <vtkRenderWindow.h>
 #include <vtkInteractorStyleTrackballCamera.h>
 
@@ -48,8 +49,8 @@ int main(int argc, char **argv) {
     iren->SetInteractorStyle(istyle);
 
     // Create pipelines
+    BoneAndTissuePipeline boneAndTissue = BoneAndTissuePipeline(reader);
     BoneOnlyPipeline boneOnly = BoneOnlyPipeline(reader);
-    boneOnly.addToRenderer(ren, iren);
 
     // Add a visualization mode callback to change rendering modes (i.e. change between pipelines) on the fly
     VisualizationModeCallback *modeCallback = VisualizationModeCallback::New();
@@ -57,7 +58,11 @@ int main(int argc, char **argv) {
     modeCallback->renWin = renWin;
     modeCallback->iren = iren;
     modeCallback->boneOnly = &boneOnly;
+    modeCallback->boneAndTissue = &boneAndTissue;
     iren->AddObserver(vtkCommand::KeyPressEvent, modeCallback);
+
+    // Start in BoneOnly mode
+    modeCallback->ActivateBoneOnly();
 	
 	// Render the scene
 	ren->SetBackground(0.1, 0.2, 0.4);

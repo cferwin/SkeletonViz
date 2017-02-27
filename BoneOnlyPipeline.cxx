@@ -115,9 +115,6 @@ BoneOnlyPipeline::~BoneOnlyPipeline() {
 void BoneOnlyPipeline::addToRenderer(vtkRenderer *ren, vtkRenderWindowInteractor *iren) {
     // Set callbacks
     iren->AddObserver(vtkCommand::KeyPressEvent, addRemoveCallback);
-   
-    // Add a clipping plane
-    plane = ClippingPlaneMaker::AddClippingPlane(iren, volume, mapper);
 
     // Add the volume to the renderer
     ren->AddVolume(volume);
@@ -126,9 +123,6 @@ void BoneOnlyPipeline::addToRenderer(vtkRenderer *ren, vtkRenderWindowInteractor
 void BoneOnlyPipeline::removeFromRenderer(vtkRenderer *ren, vtkRenderWindowInteractor *iren) {
     // Remove callbacks
     iren->RemoveObserver(addRemoveCallback);
-
-    // Remove clipping plane
-    ClippingPlaneMaker::RemoveClippingPlane(plane, mapper);
 
     // Remove volume
     ren->RemoveVolume(volume);

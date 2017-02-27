@@ -35,7 +35,6 @@ private:
     // Transfer functions
     vtkColorTransferFunction *colorFun;
     vtkPiecewiseFunction *opacityFun;
-    vtkPiecewiseFunction *gradientFun;
 
     // Interaction callbacks
     ClippingPlaneAddRemoveCallback *addRemoveCallback; // Add or remove clipping planes

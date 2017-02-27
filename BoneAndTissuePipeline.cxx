@@ -24,13 +24,10 @@ BoneAndTissuePipeline::BoneAndTissuePipeline(itk::ImageSource<ImageType> *input)
     // Create transfer functions for...
     // Color
     colorFun->AddRGBPoint(-3024, 0, 0, 0, 0.5, 0.0);
-    //colorFun->AddRGBPoint(860, 0.83, 0.94, 1, 0.63, 0.0);
     colorFun->AddRGBPoint(860, 1, 0.92, 0.54, 0.5, 0.5);
-    //colorFun->AddRGBPoint(4096, 1, 1, 1, 1, 0.5);
 
     // Opacity
     opacityFun->AddPoint(-3024, 0, 0.5, 0.0);
-    //opacityFun->AddPoint(1000, 1, 0.5, 0.0);
     opacityFun->AddPoint(1200, 1, 0.5, 0.8);
     opacityFun->AddPoint(4096, 1, 0.5, 0.0);
 
